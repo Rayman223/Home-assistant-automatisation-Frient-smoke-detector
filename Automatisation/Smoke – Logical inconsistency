@@ -1,0 +1,15 @@
+alias: Smoke – Logical inconsistency
+description: ""
+triggers:
+  - entity_id: input_boolean.alarm_is_active
+    to: "on"
+    for: "00:01:00"
+    trigger: state
+conditions:
+  - condition: state
+    entity_id: binary_sensor.groupe_detection_de_fumee
+    state: "off"
+actions:
+  - entity_id: input_boolean.alarm_is_active
+    action: input_boolean.turn_off
+mode: single
