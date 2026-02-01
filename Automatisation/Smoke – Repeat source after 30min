@@ -1,0 +1,38 @@
+alias: Smoke – Repeat source after 30min
+triggers:
+  - event_type: timer.finished
+    event_data:
+      entity_id: timer.smoke_source_block
+    trigger: event
+conditions:
+  - condition: state
+    entity_id: binary_sensor.groupe_detection_de_fumee
+    state: "on"
+  - condition: template
+    value_template: |
+      {{ states('input_text.smoke_alarm_source') != "" }}
+actions:
+  - data:
+      topic: >-
+        zigbee2mqtt/{{ device_attr(sensor, 'name') | replace('binary_sensor.',
+        '') | replace('_smoke', '') }}/set
+      payload: |-
+        {
+          "warning":
+          {
+            "duration": 60,
+            "level": "low",
+            "mode": "burglar",
+            "strobe": false,
+            "strobe_duty_cycle": 0
+          }
+        }
+    action: mqtt.publish
+  - entity_id: input_boolean.smoke_alarm_silence
+    action: input_boolean.turn_off
+  - action: input_boolean.turn_on
+    metadata: {}
+    target:
+      entity_id: input_boolean.alarm_is_active
+    data: {}
+mode: restart
