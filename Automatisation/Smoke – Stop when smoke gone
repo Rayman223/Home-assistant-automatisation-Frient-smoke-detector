@@ -1,0 +1,20 @@
+alias: Smoke – Stop when smoke gone
+description: ""
+triggers:
+  - entity_id: binary_sensor.groupe_detection_de_fumee
+    to: "off"
+    trigger: state
+actions:
+  - entity_id: switch.groupe_alarme
+    action: switch.turn_off
+  - data:
+      entity_id: input_text.smoke_alarm_source
+      value: ""
+    action: input_text.set_value
+  - action: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id:
+        - input_boolean.smoke_alarm_silence
+        - input_boolean.alarm_is_active
+mode: single
