@@ -1,0 +1,70 @@
+alias: Smoke – Detection via group
+description: |-
+  Déclenche les autres détecteurs si pas silence.
+  Envoi une notification d'alerte de fumée.
+triggers:
+  - entity_id: binary_sensor.groupe_detection_de_fumee
+    to: "on"
+    trigger: state
+conditions: []
+actions:
+  - variables:
+      source: |
+        {{ expand('binary_sensor.groupe_detection_de_fumee')
+           | selectattr('state','eq','on')
+           | map(attribute='entity_id')
+           | first }}
+      detecteur_name: |
+        {{ expand('binary_sensor.groupe_detection_de_fumee')
+           | selectattr('state','eq','on')
+           | map(attribute='name')
+           | list
+           | first }}
+  - parallel:
+      - action: script.notification
+        metadata: {}
+        data:
+          titre: Détection de fumée !
+          level: warning
+          priority: highest
+          notif: all
+          message: "Il y a de la fumée : {{ detecteur_name }} !"
+        enabled: true
+      - action: notify.rayman_home_assistant
+        data:
+          message: <@192247198170218497>
+          target: "1459865652679675915"
+          data:
+            embed:
+              title: 🚨 ALERTE FUMÉE DÉTECTÉE
+              description: "**{{ detecteur_name }}** a détecté de la fumée !"
+              color: 16711680
+              fields:
+                - name: 📍 Localisation
+                  value: "{{ detecteur_name }}"
+                  inline: true
+                - name: ⏰ Heure
+                  value: "{{ now().strftime('%H:%M:%S') }}"
+                  inline: true
+              thumbnail:
+                url: https://cdn-icons-png.flaticon.com/512/1046/1046874.png
+              footer:
+                text: Home Assistant - Alerte Urgente
+              timestamp: "{{ now().isoformat() }}"
+  - action: input_boolean.turn_on
+    metadata: {}
+    target:
+      entity_id: input_boolean.alarm_is_active
+    data: {}
+  - data:
+      entity_id: input_text.smoke_alarm_source
+      value: "{{ source }}"
+    action: input_text.set_value
+  - condition: state
+    state:
+      - "off"
+    entity_id: input_boolean.smoke_alarm_silence
+  - action: script.smoke_propagation
+    data: {}
+    enabled: true
+mode: single
