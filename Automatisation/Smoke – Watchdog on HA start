@@ -1,0 +1,46 @@
+alias: Smoke – Watchdog on HA start
+description: ""
+triggers:
+  - event: start
+    trigger: homeassistant
+conditions:
+  - condition: state
+    entity_id: binary_sensor.groupe_detection_de_fumee
+    state: "on"
+actions:
+  - variables:
+      source: |
+        {{ expand('binary_sensor.groupe_detection_de_fumee')
+           | selectattr('state','eq','on')
+           | map(attribute='entity_id')
+           | first }}
+  - data:
+      entity_id: input_text.smoke_alarm_source
+      value: "{{ source }}"
+    action: input_text.set_value
+  - action: input_boolean.turn_on
+    metadata: {}
+    target:
+      entity_id: input_boolean.alarm_is_active
+    data: {}
+  - condition: state
+    state:
+      - "off"
+    entity_id: input_boolean.smoke_alarm_silence
+  - data:
+      topic: >-
+        zigbee2mqtt/{{ device_attr(source, 'name') | replace('binary_sensor.',
+        '') | replace('_smoke', '') }}/set
+      payload: |-
+        {
+          "warning":
+          {
+            "duration": 60,
+            "level": "low",
+            "mode": "burglar",
+            "strobe": false,
+            "strobe_duty_cycle": 0
+          }
+        }
+    action: mqtt.publish
+mode: single
