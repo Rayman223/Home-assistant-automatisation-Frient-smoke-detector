@@ -1,0 +1,70 @@
+alias: Smoke – Propagation sirènes
+description: >
+  Propagation de l’alarme fumée basée sur le groupe
+  binary_sensor.groupe_detection_de_fumee
+mode: parallel
+fields:
+  source_entity:
+    selector:
+      text: null
+    name: source_entity
+    required: true
+    description: Détecteur source (binary_sensor.xxx)
+  duration_seconds:
+    selector:
+      text: null
+    default: "5"
+    name: duration_seconds
+    description: Durée en secondes pour les détecteurs secondaires
+variables:
+  duration: "{{ duration_seconds | default(5) | int }}"
+  all_smoke_detectors: |
+    {{ expand('binary_sensor.groupe_detection_de_fumee')
+       | map(attribute='entity_id')
+       | list }}
+sequence:
+  - condition: state
+    state:
+      - "off"
+    entity_id: input_boolean.smoke_alarm_silence
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.alarm_is_active
+    data: {}
+  - repeat:
+      for_each: "{{ all_smoke_detectors }}"
+      sequence:
+        - variables:
+            this_entity: "{{ repeat.item }}"
+            mqtt_name: |
+              {{ device_attr(this_entity, 'name') }}
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: "{{ this_entity == source_entity }}"
+              sequence:
+                - data:
+                    topic: zigbee2mqtt/{{ mqtt_name }}/set
+                    payload: "{\"alarm\":\"START\"}"
+                  action: mqtt.publish
+                  enabled: false
+            - conditions:
+                - condition: template
+                  value_template: "{{ this_entity != source_entity }}"
+                - condition: state
+                  entity_id: input_boolean.smoke_alarm_silence
+                  state: "off"
+              sequence:
+                - data:
+                    topic: zigbee2mqtt/{{ mqtt_name }}/set
+                    payload: |-
+                      {
+                        "warning": {
+                          "duration": {{ duration }},
+                          "level": "low",
+                          "mode": "burglar",
+                          "strobe": false,
+                          "strobe_duty_cycle": 0
+                        }
+                      }
+                  action: mqtt.publish
