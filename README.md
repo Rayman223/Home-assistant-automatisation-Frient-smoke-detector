@@ -1,0 +1,1 @@
+# Home-assistant-automatisation-Frient-smoke-detecotr
