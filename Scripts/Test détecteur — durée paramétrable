@@ -1,0 +1,67 @@
+alias: Test détecteur — durée paramétrable
+mode: restart
+fields:
+  entity_id:
+    description: Entité switch du détecteur à tester
+    example: switch.detecteur_fumee_2eme_alarm
+    selector:
+      entity:
+        domain: switch
+    required: true
+    name: entity_id
+  duration:
+    selector:
+      text: null
+    default: "00:00:05"
+    description: Durée du test au format HH:MM:SS
+    name: duration
+sequence:
+  - variables:
+      target_entity: "{{ entity_id }}"
+      mqtt_name: "{{device_attr(entity_id, 'name')}}"
+      test_duration: "{{ duration | default('00:00:03') }}"
+      test_duration_seconds: >
+        {% set t = strptime(test_duration, '%H:%M:%S') %} {% set delta =
+        timedelta(hours=t.hour, minutes=t.minute, seconds=t.second) %} {{
+        delta.total_seconds() | int }}
+  - if:
+      - condition: template
+        value_template: "{{ not target_entity }}"
+    then:
+      - stop: Aucune entity_id fournie au script test_detecteur_duree.
+        error: false
+  - target:
+      entity_id: "{{ target_entity }}"
+    action: switch.turn_on
+    data: {}
+    enabled: false
+  - action: mqtt.publish
+    data:
+      payload: |-
+        {
+          "warning":
+          {
+            "duration": {{ test_duration_seconds | default(3) }},
+            "level": "low",
+            "mode": "burglar",
+            "strobe": false,
+            "strobe_duty_cycle": 0
+          }
+        }
+      topic: zigbee2mqtt/{{ mqtt_name }}/set
+    enabled: true
+  - delay: "{{ test_duration }}"
+  - action: mqtt.publish
+    data:
+      payload: |-
+        {
+          "alarm": "OFF"
+        }
+      topic: zigbee2mqtt/{{ mqtt_name }}/set
+    enabled: true
+  - target:
+      entity_id: "{{ target_entity }}"
+    action: switch.turn_off
+    data: {}
+    enabled: true
+description: ""
