@@ -1,0 +1,39 @@
+alias: Smoke – Silence
+description: ""
+triggers:
+  - entity_id: input_boolean.smoke_alarm_silence
+    to: "on"
+    trigger: state
+actions:
+  - entity_id: timer.smoke_source_block
+    action: timer.start
+    enabled: true
+  - action: script.discord_notification_personnalisee
+    metadata: {}
+    data:
+      couleur: warning
+      channel_id: "1459865652679675915"
+      icone: ""
+      titre: Détecteur de fumée
+      message: Silence est déclenché. Les alarmes se coupent pendant X minutes.
+      mention_user: "192247198170218497"
+  - action: input_boolean.turn_off
+    metadata: {}
+    target:
+      entity_id: input_boolean.alarm_is_active
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - repeat:
+      until:
+        - condition: state
+          entity_id: timer.smoke_source_block
+          state:
+            - idle
+      sequence:
+        - entity_id: switch.groupe_alarme
+          action: switch.turn_off
+mode: single
