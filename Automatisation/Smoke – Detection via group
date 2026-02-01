@@ -32,8 +32,8 @@ actions:
         enabled: true
       - action: notify.rayman_home_assistant
         data:
-          message: <@192247198170218497>
-          target: "1459865652679675915"
+          message: <@user_id>
+          target: "channel_id"
           data:
             embed:
               title: 🚨 ALERTE FUMÉE DÉTECTÉE
