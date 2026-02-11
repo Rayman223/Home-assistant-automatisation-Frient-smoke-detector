@@ -40,4 +40,9 @@ actions:
       sequence:
         - entity_id: switch.groupe_alarme
           action: switch.turn_off
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 1
+            milliseconds: 0
 mode: single
