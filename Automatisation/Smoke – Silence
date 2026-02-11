@@ -15,7 +15,9 @@ actions:
       channel_id: "1459865652679675915"
       icone: ""
       titre: Détecteur de fumée
-      message: Silence est déclenché. Les alarmes se coupent pendant X minutes.
+      message: >-
+        Silence est déclenché. Les alarmes des détecteurs de fumée se coupent
+        pendant X minutes.
       mention_user: "192247198170218497"
   - action: input_boolean.turn_off
     metadata: {}
@@ -36,4 +38,9 @@ actions:
       sequence:
         - entity_id: switch.groupe_alarme
           action: switch.turn_off
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 1
+            milliseconds: 0
 mode: single
