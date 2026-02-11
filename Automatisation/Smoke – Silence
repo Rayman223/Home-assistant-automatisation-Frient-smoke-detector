@@ -16,8 +16,10 @@ actions:
       icone: ""
       titre: Détecteur de fumée
       message: >-
-        Silence est déclenché. Les alarmes des détecteurs de fumée se coupent
-        pendant X minutes.
+        {% set duration = state_attr('timer.smoke_source_block', 'duration') or '00:30:00' %}
+        {% set parts = duration.split(':') %}
+        Silence est déclenché. Les alarmes se coupent pendant
+        {{ (parts[0] | int * 60) + (parts[1] | int) }} minutes.
       mention_user: "192247198170218497"
   - action: input_boolean.turn_off
     metadata: {}
