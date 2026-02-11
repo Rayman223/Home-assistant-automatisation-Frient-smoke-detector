@@ -1,7 +1,7 @@
 alias: Smoke – Detection via group
-description: |-
-  Déclenche les autres détecteurs si pas silence.
-  Envoi une notification d'alerte de fumée.
+description: >-
+  Détecte la fumée via le groupe, enregistre le détecteur source, envoie les
+  notifications et déclenche la propagation des sirènes si le mode silence est inactif.
 triggers:
   - entity_id: binary_sensor.groupe_detection_de_fumee
     to: "on"
@@ -65,6 +65,7 @@ actions:
       - "off"
     entity_id: input_boolean.smoke_alarm_silence
   - action: script.smoke_propagation
-    data: {}
+    data:
+      source_entity: "{{ source }}"
     enabled: true
 mode: single

@@ -1,4 +1,7 @@
 alias: Test détecteur — durée paramétrable
+description: >-
+  Déclenche un test de sirène sur un détecteur donné pendant une durée configurable,
+  puis envoie la commande d'arrêt.
 mode: restart
 fields:
   entity_id:
@@ -18,7 +21,7 @@ fields:
 sequence:
   - variables:
       target_entity: "{{ entity_id }}"
-      mqtt_name: "{{device_attr(entity_id, 'name')}}"
+      mqtt_name: "{{ device_attr(entity_id, 'name') }}"
       test_duration: "{{ duration | default('00:00:03') }}"
       test_duration_seconds: >
         {% set t = strptime(test_duration, '%H:%M:%S') %} {% set delta =
@@ -64,4 +67,3 @@ sequence:
     action: switch.turn_off
     data: {}
     enabled: true
-description: ""
