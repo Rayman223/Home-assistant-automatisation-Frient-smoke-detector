@@ -1,5 +1,7 @@
 alias: Smoke – Stop when smoke gone
-description: ""
+description: >-
+  Arrête toutes les sirènes et remet à zéro les états de gestion quand la fumée
+  n'est plus détectée dans le groupe.
 triggers:
   - entity_id: binary_sensor.groupe_detection_de_fumee
     to: "off"

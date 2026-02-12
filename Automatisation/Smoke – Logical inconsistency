@@ -1,5 +1,7 @@
 alias: Smoke – Logical inconsistency
-description: ""
+description: >-
+  Corrige automatiquement l'état logique si l'alarme est marquée active alors
+  qu'aucune fumée n'est détectée par le groupe.
 triggers:
   - entity_id: input_boolean.alarm_is_active
     to: "on"

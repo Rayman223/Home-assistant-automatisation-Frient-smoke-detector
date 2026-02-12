@@ -1,5 +1,7 @@
 alias: Smoke – Watchdog on HA start
-description: ""
+description: >-
+  Au redémarrage de Home Assistant, restaure l'état d'alarme si de la fumée est
+  déjà détectée et relance la sirène du détecteur source si le silence est inactif.
 triggers:
   - event: start
     trigger: homeassistant
@@ -14,6 +16,10 @@ actions:
            | selectattr('state','eq','on')
            | map(attribute='entity_id')
            | first }}
+      mqtt_name: >-
+        {{ source
+           | regex_replace('^binary_sensor\\.', '')
+           | regex_replace('_smoke$', '') }}
   - data:
       entity_id: input_text.smoke_alarm_source
       value: "{{ source }}"
@@ -28,9 +34,7 @@ actions:
       - "off"
     entity_id: input_boolean.smoke_alarm_silence
   - data:
-      topic: >-
-        zigbee2mqtt/{{ device_attr(source, 'name') | replace('binary_sensor.',
-        '') | replace('_smoke', '') }}/set
+      topic: zigbee2mqtt/{{ mqtt_name }}/set
       payload: |-
         {
           "warning":

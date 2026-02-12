@@ -1,5 +1,7 @@
 alias: Smoke – Silence
-description: ""
+description: >-
+  Active le mode silence pendant la durée du timer, notifie l'utilisateur,
+  coupe l'état d'alarme global et force l'arrêt des sirènes pendant la période.
 triggers:
   - entity_id: input_boolean.smoke_alarm_silence
     to: "on"

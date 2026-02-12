@@ -1,7 +1,7 @@
 alias: Smoke – Propagation sirènes
-description: >
-  Propagation de l’alarme fumée basée sur le groupe
-  binary_sensor.groupe_detection_de_fumee
+description: >-
+  Propage l'alarme du détecteur source vers les autres détecteurs du groupe
+  en publiant les commandes Zigbee2MQTT adaptées.
 mode: parallel
 fields:
   source_entity:
@@ -9,7 +9,7 @@ fields:
       text: null
     name: source_entity
     required: true
-    description: Détecteur source (binary_sensor.xxx)
+    description: Détecteur source (binary_sensor.xxx_smoke)
   duration_seconds:
     selector:
       text: null
@@ -18,9 +18,13 @@ fields:
     description: Durée en secondes pour les détecteurs secondaires
 variables:
   duration: "{{ duration_seconds | default(5) | int }}"
+  source_mqtt_name: >-
+    {{ source_entity
+       | regex_replace('^binary_sensor\\.', '')
+       | regex_replace('_smoke$', '') }}
   all_smoke_detectors: |
     {{ expand('binary_sensor.groupe_detection_de_fumee')
-       | map(attribute='entity_id')
+       | map(attribute='name')
        | list }}
 sequence:
   - condition: state
@@ -36,27 +40,25 @@ sequence:
       sequence:
         - variables:
             this_entity: "{{ repeat.item }}"
-            mqtt_name: |
-              {{ device_attr(this_entity, 'name') }}
         - choose:
             - conditions:
                 - condition: template
-                  value_template: "{{ this_entity == source_entity }}"
+                  value_template: "{{ this_entity == source_mqtt_name }}"
               sequence:
                 - data:
-                    topic: zigbee2mqtt/{{ mqtt_name }}/set
+                    topic: zigbee2mqtt/{{ this_entity }}/set
                     payload: "{\"alarm\":\"START\"}"
                   action: mqtt.publish
                   enabled: false
             - conditions:
                 - condition: template
-                  value_template: "{{ this_entity != source_entity }}"
+                  value_template: "{{ this_entity != source_mqtt_name }}"
                 - condition: state
                   entity_id: input_boolean.smoke_alarm_silence
                   state: "off"
               sequence:
                 - data:
-                    topic: zigbee2mqtt/{{ mqtt_name }}/set
+                    topic: zigbee2mqtt/{{ this_entity }}/set
                     payload: |-
                       {
                         "warning": {

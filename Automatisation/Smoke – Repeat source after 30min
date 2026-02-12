@@ -1,4 +1,7 @@
 alias: Smoke – Repeat source after 30min
+description: >-
+  À la fin du timer de silence, relance la sirène du détecteur source enregistré
+  si la fumée est toujours présente, puis réactive l'état d'alarme global.
 triggers:
   - event_type: timer.finished
     event_data:
@@ -12,10 +15,14 @@ conditions:
     value_template: |
       {{ states('input_text.smoke_alarm_source') != "" }}
 actions:
+  - variables:
+      source_entity: "{{ states('input_text.smoke_alarm_source') }}"
+      mqtt_name: >-
+        {{ source_entity
+           | regex_replace('^binary_sensor\\.', '')
+           | regex_replace('_smoke$', '') }}
   - data:
-      topic: >-
-        zigbee2mqtt/{{ device_attr(sensor, 'name') | replace('binary_sensor.',
-        '') | replace('_smoke', '') }}/set
+      topic: zigbee2mqtt/{{ mqtt_name }}/set
       payload: |-
         {
           "warning":
